@@ -33,7 +33,7 @@ contract ERC20 is AccessControl {
        _setupRole(BURNER_ROLE, burner);
    }
 
-   function transfer(address _to, uint256 _value) public returns (bool success) {
+   function transfer(address _to, uint _value) public returns (bool success) {
        require(balances[msg.sender] >= _value, 'balance must be >= _value');
        balances[msg.sender] -= _value;
        balances[_to] += _value;
@@ -41,7 +41,7 @@ contract ERC20 is AccessControl {
        return true;
    }
 
-   function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
+   function transferFrom(address _from, address _to, uint _value) public returns (bool success) {
        require(allowed[_from][msg.sender] >= _value, 'msg.sender must be approved to transfer >= _value');
        require(balances[_from] >= _value, 'balance of _from must be >= _value');
        allowed[_from][msg.sender] -= _value;
@@ -51,26 +51,40 @@ contract ERC20 is AccessControl {
        return true;
    }
 
-   function approve(address _spender, uint256 _value) public returns (bool success) {
+   function approve(address _spender, uint _value) public returns (bool) {
        require(msg.sender != _spender);
        allowed[msg.sender][_spender] = _value;
        emit Approval(msg.sender, _spender, _value);
        return true;
    }
 
-   function mint(address _to, uint _amount)  public {
-       require(hasRole(MINTER_ROLE, msg.sender), "msg.sender must be a minter");
-       totalSupply += _amount;
-       balances[_to] += _amount;
-       emit Transfer(address(0), _to, _amount);
+   function increaseAllowance(address _spender, uint _value) public returns (bool){
+       uint allowedValue = allowed[msg.sender][_spender];
+       approve(_spender, allowedValue + _value);
+       return true;
    }
 
-   function burn(address _from, uint _amount)  public {
+   function decreaseAllowance(address _spender, uint _value) public returns (bool){
+       uint allowedValue = allowed[msg.sender][_spender];
+       require(allowedValue >= _value, '_value must be <= allowedValue');
+       approve(_spender, allowedValue - _value);
+       return true;
+   }
+
+   function mint(address _to, uint _value)  public {
+       require(hasRole(MINTER_ROLE, msg.sender), "msg.sender must be a minter");
+       totalSupply += _value;
+       balances[_to] += _value;
+       emit Transfer(address(0), _to, _value);
+   }
+
+   function burn(address _from, uint _value)  public {
        require(hasRole(BURNER_ROLE, msg.sender), "msg.sender must be a burner");
-       require(balances[_from] >= _amount, 'balance must be >= _amount');
-       balances[_from] -= _amount;
-       totalSupply -= _amount;
-       emit Transfer(msg.sender, address(0), _amount);
+       require(allowed[_from][msg.sender] >= _value, 'burner must be approved to burn >= _value');
+       require(balances[_from] >= _value, 'balance must be >= _value');
+       balances[_from] -= _value;
+       totalSupply -= _value;
+       emit Transfer(msg.sender, address(0), _value);
    }
 
    function balanceOf(address _owner) public view returns (uint) {

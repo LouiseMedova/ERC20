@@ -39,13 +39,12 @@ if (!process.env.INFURA_API_KEY) {
 function createNetworkConfig (network:string) {
   const url = 'https://' + network + '.infura.io/v3/' + infuraApiKey;
   return {
-    accounts: [mnemonic],
-    // accounts: {
-    //   count: 10,
-    //   initialIndex: 0,
-    //   mnemonic,
-    //   path: "m/44'/60'/0'/0",
-    // },
+    accounts: {
+      count: 10,
+      initialIndex: 0,
+      mnemonic,
+      path: "m/44'/60'/0'/0",
+    },
     chainId: chainIds[network],
     url,
     gas: 'auto',

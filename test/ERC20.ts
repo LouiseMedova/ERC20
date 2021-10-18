@@ -114,18 +114,50 @@ describe('Contract: CustomToken', () => {
                 .revertedWith('msg.sender must be approved to transfer >= _value')
         })     
 	})
+    describe('increase and decrease allowance', () => {
+        it('should increase allowance', async () => {
+            await reDeploy();
+            await token0.approve(user0.address, 1000);
+            await token0.increaseAllowance(user0.address, 500);
+            const allowance = await token0.allowance(owner.address, user0.address);
+            expect(allowance).to.to.equal(new BigNumber('1500').toString())
+        }) 
+
+        it('should decrease allowance', async () => {
+            await reDeploy();
+            await token0.approve(user0.address, 1000);
+            await token0.decreaseAllowance(user0.address, 500);
+            const allowance = await token0.allowance(owner.address, user0.address);
+            expect(allowance).to.to.equal(new BigNumber('500').toString())
+        }) 
+
+        it('should NOT decrease allowance if value >= allowedValue', async () => {
+            await reDeploy();
+            await token0.approve(user0.address, 1000);
+            await expect(
+                token0
+                    .decreaseAllowance(user0.address, 1001)
+            )
+                .to
+                .be
+                .revertedWith('_value must be <= allowedValue')
+        }) 
+    })
 
     describe('burn and mint', () => {
+
         it('should burn tokens', async () => {
             await reDeploy();
             const ownerInitialBalance = await token0.balanceOf(owner.address);
+            await token0.approve(user1.address, 2000);
             await token0.connect(user1).burn(owner.address, 1000);
             const ownerFinalBalance = await token0.balanceOf(owner.address);
             expect(ownerInitialBalance.sub(ownerFinalBalance)).to.to.equal(new BigNumber('1000').toString())
 		})
 
-        it('should not burn tokens if caller is not burner', async () => {
+        it('should NOT burn tokens if caller is not burner', async () => {
             await reDeploy();
+            await token0.approve(user1.address, 2000);
             await expect(
                 token0
                     .burn(owner.address, 100)
@@ -134,6 +166,32 @@ describe('Contract: CustomToken', () => {
                 .be
                 .revertedWith('msg.sender must be a burner')
 		}) 
+
+        it('should NOT burn tokens if caller is not allowed to burn', async () => {
+            await reDeploy();
+            await expect(
+                token0
+                    .connect(user1)
+                    .burn(owner.address, 100)
+            )
+                .to
+                .be
+                .revertedWith('burner must be approved to burn >= _value')
+		}) 
+
+        it('should NOT burn tokens if caller is not allowed to burn', async () => {
+            await reDeploy();
+            await token0.connect(user0).approve(user1.address, 2000);
+            await expect(
+                token0
+                    .connect(user1)
+                    .burn(user0.address, 100)
+            )
+                .to
+                .be
+                .revertedWith('balance must be >= _value')
+		}) 
+
         it('should mint tokens', async () => {
             await reDeploy();
             const ownerInitialBalance = await token0.balanceOf(owner.address);
@@ -142,7 +200,7 @@ describe('Contract: CustomToken', () => {
             expect(ownerFinalBalance.sub(ownerInitialBalance)).to.to.equal(new BigNumber('1000').toString())
 		})
 
-        it('should not mint tokens if caller is not minter', async () => {
+        it('should NOT mint tokens if caller is not minter', async () => {
             await reDeploy();
             await expect(
                 token0

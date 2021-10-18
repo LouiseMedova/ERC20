@@ -8,10 +8,11 @@ let user1: SignerWithAddress
 
 async function deployCustomToken() {
 	const ERC20 = await ethers.getContractFactory('ERC20');
-    [user0, user1] = await ethers.getSigners()
-    
+    const accounts = await ethers.getSigners();
+    console.log(accounts[1].address)
+    console.log(accounts[2].address)
 	console.log('starting deploying token...')
-	const token = await ERC20.deploy('CustomToken', 'CTM', 18,10000000000, user0.address, user0.address) as ERC20
+	const token = await ERC20.deploy('CustomToken', 'CTM', 18,10000000000, accounts[1].address, accounts[2].address) as ERC20
 	console.log('CustomToken deployed with address: ' + token.address)
 	console.log('wait of deploying...')
 	await token.deployed()
@@ -22,7 +23,7 @@ async function deployCustomToken() {
 		await run('verify:verify', {
 			address: token!.address,
 			contract: 'contracts/ERC20.sol:ERC20',
-			constructorArguments: [ 'CustomToken', 'CTM', 18,10000000000, user0.address, user0.address],
+			constructorArguments: [ 'CustomToken', 'CTM', 18,10000000000, accounts[1].address, accounts[2].address],
 		});
 		console.log('verify success')
 	} catch (e: any) {
