@@ -8,9 +8,7 @@ let user1: SignerWithAddress
 
 async function deployCustomToken() {
 	const ERC20 = await ethers.getContractFactory('ERC20');
-    const accounts = await ethers.getSigners();
-    console.log(accounts[1].address)
-    console.log(accounts[2].address)
+    	const accounts = await ethers.getSigners();
 	console.log('starting deploying token...')
 	const token = await ERC20.deploy('CustomToken', 'CTM', 18,10000000000, accounts[1].address, accounts[2].address) as ERC20
 	console.log('CustomToken deployed with address: ' + token.address)
